@@ -52,8 +52,20 @@ page_for_addr (const void *address)
 
       /* No page.  Expand stack? */
 
-/* add code */
+      /* add code */
 
+	#define STACK_CAPACITY 128*1024
+	
+
+	struct thread *current = thread_current();
+      if(((unsigned)address > PHYS_BASE-STACK_CAPACITY) &&  ( current->user_esp <= current->stack_boundary     )      ) {
+		current -> stack_boundary -= PGSIZE;
+	      return(page_allocate(pg_round_down(address), false)); //we are rounding down the page so that isi allocated to the nearest page boundary
+      }
+	
+  
+
+      
     }
   return NULL;
 }

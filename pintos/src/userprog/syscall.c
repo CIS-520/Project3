@@ -504,7 +504,40 @@ lookup_mapping (int handle)
 static void
 unmap (struct mapping *m) 
 {
+
+	void *base_addr = m->base;
+	unsigned page_cnt = m->page_cnt;
+/*	if(page_lock(m->base, false))
+	{	
+	file_write(m->file,m->base,file_length(m->file));
+	page_unlock(m->base);
+	}*/
+
+	if(pagedir_is_dirty(thread_current()->pagedir, m->base))
+		file_write(m->file,m->base,file_length(m->file));
 /* add code here */
+	void * addr = m-> base;
+	
+	off_t length = file_length(m->file);
+
+/*	for(; length>0 ; addr += PGSIZE) 
+	{
+	page_deallocate(addr);
+	length -= length >= PGSIZE ? PGSIZE : length;
+	}
+	*/
+
+	for (;m->page_cnt >0; m->page_cnt--, addr+=PGSIZE)
+	{
+		page_deallocate(addr);
+	}
+
+	list_remove (&m->elem);
+	
+
+	file_close(m->file);
+
+	free(m);
 }
  
 /* Mmap system call. */
@@ -561,7 +594,22 @@ static int
 sys_munmap (int mapping) 
 {
 /* add code here */
-
+  struct thread *cur = thread_current();
+  struct list_elem *e, *next;
+  for (e = list_begin (&cur->mappings); e != list_end (&cur->mappings);
+       e = next)
+    {
+      struct mapping *m = list_entry (e, struct mapping, elem);
+      next = list_next (e);
+      if (m->handle == mapping)
+      { 
+	
+	unmap (m);
+	/*for(;page_cnt;page_cnt--,base_addr+=PGSIZE){
+		pagedir_clear_page(thread_current()->pagedir, base_addr);
+	}*/
+      }
+    }
   return 0;
 }
  
@@ -587,6 +635,10 @@ syscall_exit (void)
     {
       struct mapping *m = list_entry (e, struct mapping, elem);
       next = list_next (e);
+
+
+
+
       unmap (m);
     }
 }

@@ -599,6 +599,18 @@ init_cmd_line (uint8_t *kpage, uint8_t *upage, const char *cmd_line,
   return true;
 }
 
+
+static bool
+install_page (void *upage, void *kpage, bool writable)
+{
+  struct thread *t = thread_current ();
+
+  /* Verify that there's not already a page at that virtual
+     address, then map our page there. */
+  return (pagedir_get_page (t->pagedir, upage) == NULL
+          && pagedir_set_page (t->pagedir, upage, kpage, writable));
+}
+
 /* Create a minimal stack for T by mapping a page at the
    top of user virtual memory.  Fills in the page using CMD_LINE
    and sets *ESP to the stack pointer. */
@@ -621,3 +633,8 @@ setup_stack (const char *cmd_line, void **esp)
     }
   return false;
 }
+
+
+
+
+
