@@ -156,18 +156,21 @@ page_out (struct page *p)
      process to fault.  This must happen before checking the
      dirty bit, to prevent a race with the process dirtying the
      page. */
+pagedir_clear_page(p->thread->pagedir, p->addr);
 
-/* add code here */
 
-  /* Has the frame been modified? */
+if (!pagedir_is_dirty(p->thread->pagedir, p->addr) && ( p->file != NULL) ){
+	p->frame = NULL;
+	return true;
+	}
+else{
+	if (swap_out(p)) {
+	  p->frame = NULL;
+	  return  true;
+        }
+}
+return false;
 
-/* add code here */
-
-  /* Write frame contents to disk if necessary. */
-
-/* add code here */
-
-  return ok;
 }
 
 /* Returns true if page P's data has been accessed recently,
